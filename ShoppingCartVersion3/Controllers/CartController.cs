@@ -49,12 +49,12 @@ namespace ShoppingCartVersion3.Models.Controllers
 
         public double GetTotalPrice()
         {
-            throw new NotImplementedException();
+            return CartProducts.Sum(p => p.Quantity * p.Price);
         }
 
-        private bool IsPromotionAvailable(int lastAddedItemId)
+        private bool IsPromotionAvailable(int lastAlteredItemId)
         {
-            throw new NotImplementedException();
+            return ProductPromotionRepository.GetProductPromotionByProductId(lastAlteredItemId) != null ? true : false;
         }
         
         private void ApplyPromotion(int productDiscountPromotionId)

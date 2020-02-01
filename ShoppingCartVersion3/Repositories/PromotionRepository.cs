@@ -26,5 +26,9 @@ namespace ShoppingCartVersion3.Repositories
             }
         };
 
+        public static Promotion GetPromotion(int id)
+        {
+            return _promotions.FirstOrDefault(p => p.Id == id);
+        }
     }
 }

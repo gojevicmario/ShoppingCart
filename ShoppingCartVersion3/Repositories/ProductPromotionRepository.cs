@@ -25,5 +25,31 @@ namespace ShoppingCartVersion3.Repositories
                 PromotionId = 2
             }
         };
+
+        public static IEnumerable<ProductPromotion> GetProductPromotions()
+        {
+            return _productPromotions;
+        }
+
+        public static ProductPromotion GetProductPromotionById(int id)
+        {
+            return _productPromotions.FirstOrDefault(p => p.Id == id);
+        }
+
+        public static ProductPromotion GetProductPromotionByProductId(int id)
+        {
+            return _productPromotions.FirstOrDefault(p => p.ProductId == id);
+        }
+
+        public static ProductPromotion GetProductPromotionByPromoProductId(int id)
+        {
+            return _productPromotions.FirstOrDefault(p => p.PromotionalProductId == id);
+        }
+        public static ProductPromotion GetProductPromotionByPromotionId(int id)
+        {
+            return _productPromotions.FirstOrDefault(p => p.PromotionId == id);
+        }
+
+
     }
 }

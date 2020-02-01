@@ -29,5 +29,15 @@ namespace ShoppingCartVersion3.Repositories
                 Price = 1
             }
         };
+
+        public static Product GetProduct(int id)
+        {
+            return _products.FirstOrDefault(p => p.Id == id);
+        }
+
+        public static List<Product> GetAllProducts()
+        {
+            return _products;
+        }
     }
 }

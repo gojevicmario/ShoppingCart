@@ -47,5 +47,10 @@ namespace ShoppingCartVersion3.Models
         {
             return oldPrice * ((100 - amount) / (double)100);
         }
+
+        public override string ToString()
+        {
+            return $"ProductId: {Id} Name:{Name} base price: {Price}";
+        }
     }
 }

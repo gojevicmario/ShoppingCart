@@ -24,9 +24,9 @@ namespace ShoppingCartVersion3.Models.Controllers
             var promotions = IsPromotionAvailable(productId);
 
             if (promotions.Any(p => p.Equals(ProductType.Product)))
-                ApplyPromotionRefactor(productId,ProductType.Product);
+                ApplyPromotion(productId,ProductType.Product);
             else if(promotions.Any(p => p.Equals(ProductType.PromoProduct)))
-                ApplyPromotionRefactor(productId, ProductType.PromoProduct);
+                ApplyPromotion(productId, ProductType.PromoProduct);
 
         }
 
@@ -56,6 +56,59 @@ namespace ShoppingCartVersion3.Models.Controllers
                 cartProduct.Quantity--;
         }
 
+        public void RemoveCartProductRefactor(int productId)
+        {
+
+            var cartProducts = GetCartProducts(productId);
+
+            if(cartProducts.Exists(p => p.IsPromotion))
+            {
+
+            }
+            else if (ProductPromotionRepository.GetProductPromotionByPromoProductId(productId).PromotionalProductId == productId)
+            {
+                //ako je productId zapravo promo produkt nekog drugog proizvoda
+            }
+            else
+            {
+                var cartProduct = CartProducts.FirstOrDefault(p => p.Id == productId && p.IsPromotion == false);
+                if (cartProduct == null)
+                    throw new InvalidOperationException();
+                if (cartProduct.Quantity == 1)
+                    CartProducts.Remove(cartProduct);
+                else
+                    cartProduct.Quantity--;
+            }
+            //var cartProduct = CartProducts.FirstOrDefault(p => p.Id == productId && p.IsPromotion == false);
+            //if (cartProduct == null)
+            //    throw new InvalidOperationException();
+            //if (cartProduct.Quantity == 1)
+            //    CartProducts.Remove(cartProduct);
+            //else
+            //    cartProduct.Quantity--;
+
+            //var promotionTypesForProduct = IsPromotionAvailable(productId);
+
+            //if(promotionTypesForProduct.Count != 0)
+            //{
+            //    if (promotionTypesForProduct.Contains(ProductType.Product) && 
+            //        !ArePromotionRequirementsMet(ProductPromotionRepository.GetProductPromotionByProductId(productId).ProductId,
+            //                                    ProductPromotionRepository.GetProductPromotionByProductId(productId).PromotionId))
+            //    {
+            //        if(IsProductInCart(ProductPromotionRepository.GetProductPromotionByProductId(productId).ProductId, true))
+            //        {
+
+            //        }
+            //    }
+            //    else if(promotionTypesForProduct.Contains(ProductType.PromoProduct) &&
+            //        !ArePromotionRequirementsMet(ProductPromotionRepository.GetProductPromotionByPromoProductId(productId).PromotionalProductId,
+            //                                    ProductPromotionRepository.GetProductPromotionByPromoProductId(productId).PromotionId))
+            //    {
+
+            //    }
+            //}
+        }
+
         private void RemoveCartProduct(int productId, int promotionId)
         {
             bool isPromotion = promotionId > 0 ? true : false;
@@ -76,7 +129,32 @@ namespace ShoppingCartVersion3.Models.Controllers
 
         public double GetTotalPrice()
         {
-            return Math.Round(CartProducts.Sum(p => p.Quantity * p.Price),2);
+
+            LogCartDetails();
+            return CalculateTotalPrice();
+        }
+
+        private void LogCartDetails()
+        {
+            Console.WriteLine("Current state of cart");
+            var temp = CartProducts.GroupBy(item => item.Id);
+            
+            foreach (var cartProduct in temp)
+            {
+                var totalQuantity = cartProduct.Sum(p => p.Quantity);
+                Console.WriteLine($"{cartProduct.First().ToString()}\n" +
+                    $"item Quantity: {cartProduct.Sum(p => p.Quantity)} \n" +
+                    $"Total price: {cartProduct.Sum(p => p.Price * p.Quantity)}\n");
+                if(cartProduct.Any( p => p.IsPromotion) && ProductPromotionRepository.GetProductPromotionByProductId(cartProduct.First().Id) != null)
+                    Console.Write($"Applied promotion id {ProductPromotionRepository.GetProductPromotionByProductId(cartProduct.First().Id).PromotionId}");
+                else if(cartProduct.Any(p => p.IsPromotion) && ProductPromotionRepository.GetProductPromotionByPromoProductId(cartProduct.First().Id) != null)
+                    Console.Write($"Applied promotion id {ProductPromotionRepository.GetProductPromotionByPromoProductId(cartProduct.First().Id).PromotionId}");
+            }
+        }
+
+        private double CalculateTotalPrice()
+        {
+            return Math.Round(CartProducts.Sum(p => p.Quantity * p.Price), 2);
         }
 
         private List<ProductType> IsPromotionAvailable(int lastAlteredItemId)
@@ -107,38 +185,8 @@ namespace ShoppingCartVersion3.Models.Controllers
             return numberOfProducts >= promotion.NumberOfRequiredItems && (numberOfProducts / (double)promotion.NumberOfRequiredItems) % 1 == 0;
 
         }
-        private void ApplyPromotion(int lastAlteredItemId)
-        {
-            var productPromotion = ProductPromotionRepository.GetProductPromotionByProductId(lastAlteredItemId);
-            var promotion = PromotionRepository.FindById(productPromotion.PromotionId);
-            var cartProducts = GetCartProducts(lastAlteredItemId);
 
-            if (promotion == null)
-                throw new InvalidOperationException();
-            if(cartProducts.Single(p => p.IsPromotion == false).Quantity >= promotion.NumberOfRequiredItems && (cartProducts.Single(p => p.IsPromotion == false).Quantity / (double)promotion.NumberOfRequiredItems) % 1 == 0)
-            {
-                if((cartProducts.SingleOrDefault(p => p.IsPromotion == true) == null ||
-                    cartProducts.SingleOrDefault(p => p.IsPromotion == true).Quantity < promotion.MaximumOccurances) && 
-                    IsProductInCart(productPromotion.PromotionalProductId,false))
-                {
-                    //Prođi opet kroz ovu logiku, sad obriše i doda promo, mozda bi trebalo samo dodat promo?
-                    // vjerovatno bi trebalo prvo ga dodat pa onda runnat ovaj kurac da ga moze prebacit u pravu listu
-                    RemoveCartProduct(productPromotion.PromotionalProductId, 0);
-                    AddCartProduct(productPromotion.PromotionalProductId, promotion.Id);
-                }
-                else
-                {
-                    AddCartProduct(productPromotion.PromotionalProductId, productPromotion.PromotionId);
-                }
-            }
-            else
-            {
-                throw new NotImplementedException("Remove discount");
-            }
-
-        }
-
-        private void ApplyPromotionRefactor(int lastAlteredItemId, ProductType productType)
+        private void ApplyPromotion(int lastAlteredItemId, ProductType productType)
         {
             var cartProducts = GetCartProducts(lastAlteredItemId);
             ProductPromotion productPromotion;

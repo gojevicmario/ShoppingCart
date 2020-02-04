@@ -51,8 +51,6 @@ namespace ShoppingCartTests
             cart.AddCartProduct(2);
             cart.AddCartProduct(2);
 
-
-
             Assert.That(cart.GetTotalPrice(), Is.EqualTo(Math.Round(ProductRepository.GetProduct(2).Price * 3,2)));
         }
 
@@ -138,6 +136,8 @@ namespace ShoppingCartTests
             cart.AddCartProduct(1);
             cart.AddCartProduct(1);
 
+            cart.AddCartProduct(1);
+
             cart.AddCartProduct(3);
 
             for (int i = 0; i < 8; i++)
@@ -145,7 +145,7 @@ namespace ShoppingCartTests
                 cart.AddCartProduct(2);
             }
 
-            cart.RemoveCartProduct(2);
+            cart.RemoveCartProductRefactor(1);
 
             Assert.That(cart.GetTotalPrice(), Is.EqualTo((double)9));
         }

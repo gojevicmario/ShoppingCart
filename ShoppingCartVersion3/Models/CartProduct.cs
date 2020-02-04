@@ -34,7 +34,7 @@ namespace ShoppingCartVersion3.Models
         public CartProduct(int baseProductId,int promotionId)
         {
             var baseProduct = ProductRepository.GetProduct(baseProductId);
-            var promotion = PromotionRepository.GetPromotion(promotionId);
+            var promotion = PromotionRepository.FindById(promotionId);
 
             Id = baseProduct.Id;
             Name = baseProduct.Name;
@@ -45,7 +45,7 @@ namespace ShoppingCartVersion3.Models
 
         private double GetPriceWithPromotion(double oldPrice, int amount)
         {
-            return oldPrice * ((100 - amount) / 100);
+            return oldPrice * ((100 - amount) / (double)100);
         }
     }
 }

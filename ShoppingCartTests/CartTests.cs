@@ -136,7 +136,6 @@ namespace ShoppingCartTests
             cart.AddCartProduct(1);
             cart.AddCartProduct(1);
 
-            cart.AddCartProduct(1);
 
             cart.AddCartProduct(3);
 
@@ -145,9 +144,11 @@ namespace ShoppingCartTests
                 cart.AddCartProduct(2);
             }
 
-            cart.RemoveCartProductRefactor(1);
+            cart.RemoveCartProduct(1);
+            cart.RemoveCartProduct(1);
+            cart.RemoveCartProduct(2);
 
-            Assert.That(cart.GetTotalPrice(), Is.EqualTo((double)9));
+            Assert.That(cart.GetTotalPrice(), Is.EqualTo((double)7.9));
         }
     }
 }

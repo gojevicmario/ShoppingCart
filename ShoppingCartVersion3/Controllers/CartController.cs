@@ -49,8 +49,8 @@ namespace ShoppingCartVersion3.Models.Controllers
             else
             {
                 var productPromotion = ProductPromotionRepository.GetProductPromotionByProductId(productId);
-                var promotion = PromotionRepository.FindById(productPromotion.PromotionId);
-                if((IsProductInCart(productPromotion.PromotionalProductId,false) || IsProductInCart(productPromotion.PromotionalProductId, true)) &&
+                var promotion = PromotionRepository.GetPromotion(productPromotion.PromotionId);
+                if(IsProductInCart(productPromotion.PromotionalProductId) &&
                     (!ArePromotionRequirementsMet(productPromotion.ProductId, productPromotion.PromotionId) 
                     && IsProductInCart(productPromotion.PromotionalProductId, true)))
                 {
@@ -75,9 +75,9 @@ namespace ShoppingCartVersion3.Models.Controllers
                 cartProduct.Quantity--;
         }
 
-        public List<CartProduct> GetCartProducts(int itemId)
+        public List<CartProduct> GetCartProducts(int productId)
         {
-            return CartProducts.Where(item => item.Id == itemId).ToList();
+            return CartProducts.Where(product => product.Id == productId).ToList();
         }
 
         public double GetTotalPrice()
@@ -90,18 +90,18 @@ namespace ShoppingCartVersion3.Models.Controllers
         private void LogCartDetails()
         {
             Console.WriteLine("Current state of cart");
-            var temp = CartProducts.GroupBy(item => item.Id);
+            var temp = CartProducts.GroupBy(product => product.Id);
             
             foreach (var cartProduct in temp)
             {
                 var totalQuantity = cartProduct.Sum(p => p.Quantity);
-                Console.WriteLine($"{cartProduct.First().ToString()}\n" +
-                    $"item Quantity: {cartProduct.Sum(p => p.Quantity)} \n" +
-                    $"Total price: {cartProduct.Sum(p => p.Price * p.Quantity)}\n");
+                Console.Write($"{cartProduct.First().ToString()}\n" +
+                    $"product Quantity: {cartProduct.Sum(p => p.Quantity)}\n" +
+                    $"cost of products: {cartProduct.Sum(p => p.Price * p.Quantity)}\n");
                 if(cartProduct.Any( p => p.IsPromotion) && ProductPromotionRepository.GetProductPromotionByProductId(cartProduct.First().Id) != null)
-                    Console.Write($"Applied promotion id {ProductPromotionRepository.GetProductPromotionByProductId(cartProduct.First().Id).PromotionId}");
+                    Console.Write($"Applied promotion id {ProductPromotionRepository.GetProductPromotionByProductId(cartProduct.First().Id).PromotionId}\n");
                 else if(cartProduct.Any(p => p.IsPromotion) && ProductPromotionRepository.GetProductPromotionByPromoProductId(cartProduct.First().Id) != null)
-                    Console.Write($"Applied promotion id {ProductPromotionRepository.GetProductPromotionByPromoProductId(cartProduct.First().Id).PromotionId}");
+                    Console.Write($"Applied promotion id {ProductPromotionRepository.GetProductPromotionByPromoProductId(cartProduct.First().Id).PromotionId}\n");
             }
         }
 
@@ -113,17 +113,17 @@ namespace ShoppingCartVersion3.Models.Controllers
         {
             return GetCartProducts(productId).Sum(p => p.Quantity);
         }
-        private List<ProductType> IsPromotionAvailable(int lastAlteredItemId)
+        private List<ProductType> IsPromotionAvailable(int lastAlteredproductId)
         {
             List<ProductType> types = new List<ProductType>();
-            var productPromotionByProductId = ProductPromotionRepository.GetProductPromotionByProductId(lastAlteredItemId);
+            var productPromotionByProductId = ProductPromotionRepository.GetProductPromotionByProductId(lastAlteredproductId);
             if(productPromotionByProductId != null &&
                 ArePromotionRequirementsMet(productPromotionByProductId.ProductId, productPromotionByProductId.PromotionId))
             {
                     types.Add(ProductType.Product);
 
             }
-            var productPromotionByPromoProductId = ProductPromotionRepository.GetProductPromotionByPromoProductId(lastAlteredItemId);
+            var productPromotionByPromoProductId = ProductPromotionRepository.GetProductPromotionByPromoProductId(lastAlteredproductId);
             if(productPromotionByPromoProductId != null && ArePromotionRequirementsMet(productPromotionByPromoProductId.ProductId, productPromotionByPromoProductId.PromotionId))
             {
                     types.Add(ProductType.PromoProduct);
@@ -134,30 +134,30 @@ namespace ShoppingCartVersion3.Models.Controllers
 
         private bool ArePromotionRequirementsMet(int productId, int promotionId)
         {
-            var promotion = PromotionRepository.FindById(promotionId);
+            var promotion = PromotionRepository.GetPromotion(promotionId);
             var productPromotion = ProductPromotionRepository.GetProductPromotionByPromotionId(promotionId);
 
             int numberOfProducts = GetNumberOfProductsInCart(productId);
-            int numberOfRequiredItems = promotion.NumberOfRequiredItems;
+            int numberOfRequiredproducts = promotion.NumberOfRequiredproducts;
             int numberOfPromotionalProductsInCart = GetCartProducts(productPromotion.PromotionalProductId).FirstOrDefault(p => p.IsPromotion) == null ? 0 : GetCartProducts(productPromotion.PromotionalProductId).FirstOrDefault(p => p.IsPromotion).Quantity;
 
             if (GetCartProducts(productPromotion.PromotionalProductId).FirstOrDefault(p => p.IsPromotion) != null && GetCartProducts(productPromotion.PromotionalProductId).FirstOrDefault(p => p.IsPromotion).Quantity >= promotion.MaximumOccurances)
                 return false;
-            return numberOfProducts >= numberOfRequiredItems && (numberOfPromotionalProductsInCart == 0 || (numberOfProducts / numberOfRequiredItems > numberOfPromotionalProductsInCart));
+            return numberOfProducts >= numberOfRequiredproducts && (numberOfPromotionalProductsInCart == 0 || (numberOfProducts / numberOfRequiredproducts > numberOfPromotionalProductsInCart));
         }
 
-        private void ApplyPromotion(int lastAlteredItemId, ProductType productType)
+        private void ApplyPromotion(int lastAlteredproductId, ProductType productType)
         {
-            var cartProducts = GetCartProducts(lastAlteredItemId);
+            var cartProducts = GetCartProducts(lastAlteredproductId);
             ProductPromotion productPromotion;
             if (productType == ProductType.Product)
-                productPromotion = ProductPromotionRepository.GetProductPromotionByProductId(lastAlteredItemId);
+                productPromotion = ProductPromotionRepository.GetProductPromotionByProductId(lastAlteredproductId);
             else if (productType == ProductType.PromoProduct)
-                productPromotion = ProductPromotionRepository.GetProductPromotionByPromoProductId(lastAlteredItemId);
+                productPromotion = ProductPromotionRepository.GetProductPromotionByPromoProductId(lastAlteredproductId);
             else
                 throw new Exception("greska");
 
-            var promotion = PromotionRepository.FindById(productPromotion.PromotionId);
+            var promotion = PromotionRepository.GetPromotion(productPromotion.PromotionId);
 
             if(IsProductInCart(productPromotion.PromotionalProductId, false))
             {
@@ -171,5 +171,9 @@ namespace ShoppingCartVersion3.Models.Controllers
             return CartProducts.Any(p => p.Id == productId && p.IsPromotion == isPromotion);
         }
 
+        private bool IsProductInCart(int productId)
+        {
+            return CartProducts.Any(p => p.Id == productId);
+        }
     }
 }

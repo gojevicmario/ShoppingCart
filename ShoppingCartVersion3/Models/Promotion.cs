@@ -11,6 +11,6 @@ namespace ShoppingCartVersion3.Models
         public int Id { get; set; }
         public int Amount { get; set; }
         public int MaximumOccurances { get; set; }
-        public int NumberOfRequiredItems { get; set; }
+        public int NumberOfRequiredproducts { get; set; }
     }
 }

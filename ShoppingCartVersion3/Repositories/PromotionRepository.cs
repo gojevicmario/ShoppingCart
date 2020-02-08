@@ -13,20 +13,20 @@ namespace ShoppingCartVersion3.Repositories
             new Promotion()
             {
                 Id = 1,
-                NumberOfRequiredItems = 2,
+                NumberOfRequiredproducts = 2,
                 Amount = 50,
                 MaximumOccurances = 1
             },
             new Promotion()
             {
                 Id = 2,
-                NumberOfRequiredItems = 4,
+                NumberOfRequiredproducts = 4,
                 Amount = 100,
                 MaximumOccurances = int.MaxValue
             }
         };
 
-        public static Promotion FindById(int id)
+        public static Promotion GetPromotion(int id)
         {
             return _promotions.FirstOrDefault(p => p.Id == id);
         }

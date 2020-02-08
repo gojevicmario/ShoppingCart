@@ -34,7 +34,7 @@ namespace ShoppingCartVersion3.Models
         public CartProduct(int baseProductId,int promotionId)
         {
             var baseProduct = ProductRepository.GetProduct(baseProductId);
-            var promotion = PromotionRepository.FindById(promotionId);
+            var promotion = PromotionRepository.GetPromotion(promotionId);
 
             Id = baseProduct.Id;
             Name = baseProduct.Name;
@@ -50,7 +50,7 @@ namespace ShoppingCartVersion3.Models
 
         public override string ToString()
         {
-            return $"ProductId: {Id} Name:{Name} base price: {Price}";
+            return $"\nProductId: {Id}\nName:{Name}\nbase price: {Price}";
         }
     }
 }

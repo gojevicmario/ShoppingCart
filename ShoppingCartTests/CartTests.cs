@@ -147,7 +147,6 @@ namespace ShoppingCartTests
             cart.RemoveCartProduct(1);
             cart.RemoveCartProduct(1);
             cart.RemoveCartProduct(2);
-
             Assert.That(cart.GetTotalPrice(), Is.EqualTo((double)7.9));
         }
     }
